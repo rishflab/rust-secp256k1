@@ -105,21 +105,24 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-      - name: Running WASM tests Ubuntu
+      - name: Install gcc for MacOS
+        if: matrix.os == 'macos-latest'
+        run: brew install gcc
+      - name: Setup wasm test
+        run: |
+          CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack
+          printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml
+
+      - name: Running wasm tests Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
           clang --version
-          CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack &&
-          printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml &&
           CC=clang-9 wasm-pack build
           CC=clang-9 wasm-pack test --node
 
-      - name: Running WASM tests MacOS
+      - name: Running wasm tests MacOS
         if: matrix.os == 'macos-latest'
         run: |
-          brew install gcc
           gcc --version
-          CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack &&
-          printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml &&
           CC=gcc wasm-pack build
           CC=gcc wasm-pack test --node
