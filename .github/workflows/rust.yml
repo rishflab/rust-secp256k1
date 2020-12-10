@@ -91,11 +91,15 @@ jobs:
 
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
+            ci_cc: clang-9
 
           - target: x86_64-apple-darwin
             os: macos-latest
+            ci_cc: gcc
 
     runs-on: ${{ matrix.os }}
+    env:
+      CC: ${{ matrix.ci_cc }}
     steps:
       - name: Checkout Crate
         uses: actions/checkout@v2
@@ -113,16 +117,17 @@ jobs:
           CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack
           printf '\n[lib]\ncrate-type = ["cdylib", "rlib"]\n' >> Cargo.toml
 
-      - name: Running wasm tests Ubuntu
+      - name: Print clang version Ubuntu
         if: matrix.os == 'ubuntu-latest'
         run: |
           clang --version
-          CC=clang-9 wasm-pack build
-          CC=clang-9 wasm-pack test --node
 
-      - name: Running wasm tests MacOS
+      - name: Print gcc version MacOS
         if: matrix.os == 'macos-latest'
         run: |
           gcc --version
-          CC=gcc wasm-pack build
-          CC=gcc wasm-pack test --node
+
+      - name: Running wasm tests
+        run: |
+          wasm-pack build
+          wasm-pack test --node
