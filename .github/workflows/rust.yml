@@ -92,14 +92,17 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             ci_cc: clang-9
+            ci_ar: ar
 
           - target: x86_64-apple-darwin
             os: macos-latest
-            ci_cc: gcc
+            ci_cc: /usr/local/opt/llvm/bin/clang
+            ci_ar: /usr/local/opt/llvm/bin/llvm-ar
 
     runs-on: ${{ matrix.os }}
     env:
       CC: ${{ matrix.ci_cc }}
+      AR: ${{ matrix.ci_ar }}
     steps:
       - name: Checkout Crate
         uses: actions/checkout@v2
@@ -109,9 +112,9 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
-      - name: Install gcc for MacOS
+      - name: Install llvm for MacOS
         if: matrix.os == 'macos-latest'
-        run: brew install gcc
+        run: brew install llvm
       - name: Setup wasm test
         run: |
           CARGO_TARGET_DIR=wasm cargo install --verbose --force wasm-pack
@@ -125,7 +128,7 @@ jobs:
       - name: Print gcc version MacOS
         if: matrix.os == 'macos-latest'
         run: |
-          gcc --version
+          clang --version
 
       - name: Running wasm tests
         run: |
